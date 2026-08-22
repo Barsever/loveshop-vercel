@@ -1,17 +1,13 @@
-'use strict';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
+import { load, save, uid, nextId, hashPassword } from './lib/db.js';
+import seed from './lib/seed.js';
 
-const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const { load, save, uid, nextId, hashPassword } = require('./lib/db.js');
-const seed = require('./lib/seed.js');
 
 const PORT = 3000;
 const ROOT = __dirname;
@@ -1544,8 +1540,19 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, pa
 
 /* ---------------- router ---------------- */
 export const handler = async (req: http.IncomingMessage, res: http.ServerResponse) => {
-  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-  const pathname = decodeURI(url.pathname).replace(/\/+$/, '') || '/';
+  let url: URL;
+  let pathname = '/';
+  try {
+    url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+    try {
+      pathname = decodeURI(url.pathname).replace(/\/+$/, '') || '/';
+    } catch {
+      pathname = url.pathname.replace(/\/+$/, '') || '/';
+    }
+  } catch {
+    url = new URL('/', 'http://localhost');
+    pathname = '/';
+  }
   try {
     if (req.method === 'GET') {
       if (pathname.startsWith('/css/') || pathname.startsWith('/js/') || pathname.startsWith('/uploads/') || pathname.startsWith('/media/')) {
