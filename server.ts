@@ -1555,8 +1555,16 @@ export const handler = async (req: http.IncomingMessage, res: http.ServerRespons
   }
   try {
     if (req.method === 'GET') {
-      if (pathname.startsWith('/css/') || pathname.startsWith('/js/') || pathname.startsWith('/uploads/') || pathname.startsWith('/media/')) {
-        return serveStatic(req, res, pathname);
+      if (
+        pathname.startsWith('/css/') ||
+        pathname.startsWith('/js/') ||
+        pathname.startsWith('/uploads/') ||
+        pathname.startsWith('/media/') ||
+        pathname.startsWith('/assets/') ||
+        pathname.startsWith('/public/') ||
+        /\.(svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2|ttf|mp4|json)$/i.test(pathname)
+      ) {
+        return serveStatic(req, res, pathname.replace(/^\/public/, ''));
       }
       if (pathname === '/') return pageHome(req, res);
       if (pathname === '/magaza') return pageShop(req, res);
