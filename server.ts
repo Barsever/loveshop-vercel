@@ -4,7 +4,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { load, save, uid, nextId, hashPassword } from './lib/db.js';
-import seed from './lib/seed.js';
+import seed, { getSvgForSlug } from './lib/seed.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1014,11 +1014,26 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse, pathna
   const p = path.normalize(path.join(PUB, pathname));
   if (!p.startsWith(PUB)) { res.writeHead(403); return res.end(); }
   const type = MIME[path.extname(p)] || 'application/octet-stream';
+
+  const sendSvgFallback = () => {
+    if (pathname.startsWith('/uploads/') || pathname.includes('/uploads/')) {
+      const slug = path.basename(pathname, path.extname(pathname));
+      const svg = getSvgForSlug(slug);
+      res.writeHead(200, {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=86400'
+      });
+      return res.end(svg);
+    }
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    return res.end('404');
+  };
+
   fs.stat(p, (serr, st) => {
-    if (serr) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('404'); }
+    if (serr) { return sendSvgFallback(); }
     fs.readFile(p, (err, buf) => {
-      if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('404'); }
-      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+      if (err) { return sendSvgFallback(); }
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' });
       res.end(buf);
     });
   });
