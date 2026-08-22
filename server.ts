@@ -18,6 +18,10 @@ const SESSIONS_FILE = path.join(DATA, 'sessions.json');
 // Ensure db and seed data exist with studio art-directed assets
 try { seed(false); } catch (e) {}
 let db = load();
+if (!db.products || !db.products.length) {
+  try { seed(true); } catch (e) {}
+  db = load();
+}
 if (!db.contact) db.contact = [];
 
 let sessions: Record<string, any> = {};
@@ -619,7 +623,7 @@ ${body}
 }
 
 const productCardSSR = (p: any, tr: any) => `
-<article class="prod-card rv" data-id="${p.id}">
+<article class="prod-card rv" data-id="${p.id}" data-slug="${esc(p.slug)}">
   <a href="/urun/${esc(p.slug)}" class="prod-media" data-slug="${esc(p.slug)}">
     <img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">
     <div class="card-sheen"></div>
@@ -780,13 +784,27 @@ function pageShop(req: http.IncomingMessage, res: http.ServerResponse) {
 
 function pageProduct(req: http.IncomingMessage, res: http.ServerResponse, slug: string) {
   const C = pageCtx(req);
+  const rawKey = decodeURIComponent(slug || '').trim().toLowerCase();
+  const cleanKey = rawKey.replace(/^\/urun\//, '').replace(/\/+$/, '');
+  const p = db.products.find((x: any) => {
+    const s = String(x.slug || '').toLowerCase();
+    const i = String(x.id || '').toLowerCase();
+    return s === cleanKey || i === cleanKey || s === rawKey || i === rawKey;
+  });
+  const pageTitle = p ? p.name : (C.lang === 'en' ? 'Product' : 'Ürün');
   const html = `<div id="product-root"><div class="spinner"></div></div>`;
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(layout(C.lang === 'en' ? 'Product' : 'Ürün', html, {}, C));
+  res.end(layout(pageTitle, html, {}, C));
 }
 
 function pageReviewForm(req: http.IncomingMessage, res: http.ServerResponse, slug: string) {
-  const p = db.products.find((x: any) => x.slug === slug);
+  const rawKey = decodeURIComponent(slug || '').trim().toLowerCase();
+  const cleanKey = rawKey.replace(/^\/urun\//, '').replace(/\/+$/, '');
+  const p = db.products.find((x: any) => {
+    const s = String(x.slug || '').toLowerCase();
+    const i = String(x.id || '').toLowerCase();
+    return s === cleanKey || i === cleanKey || s === rawKey || i === rawKey;
+  });
   if (!p) { res.writeHead(302, { Location: '/magaza' }); return res.end(); }
   const C = pageCtx(req);
   const tr = C.t;
@@ -1116,15 +1134,28 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, pa
     const limit = Math.min(parseInt(q.get('limit') || '24', 10) || 24, 60);
     return json(res, 200, { ok: true, total, products: list.slice(offset, offset + limit) });
   }
-  const pSlug = pathname.match(/^\/api\/products\/([^/]+)$/);
+  const pSlug = pathname.match(/^\/api\/products\/([^/]+)\/?$/);
   if (pSlug && method === 'GET') {
-    const p = db.products.find((x: any) => x.slug === decodeURIComponent(pSlug[1]) || x.id === decodeURIComponent(pSlug[1]));
+    const rawKey = decodeURIComponent(pSlug[1]).trim().toLowerCase();
+    const cleanKey = rawKey.replace(/^\/urun\//, '').replace(/\/+$/, '');
+    const p = db.products.find((x: any) => {
+      const s = String(x.slug || '').toLowerCase();
+      const i = String(x.id || '').toLowerCase();
+      const n = String(x.name || '').toLowerCase().replace(/[çğıöşü]/g, (c) => ({ 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' }[c] || c)).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      return s === cleanKey || i === cleanKey || n === cleanKey || s === rawKey || i === rawKey;
+    });
     if (!p) return sendError(res, 404, E('err.noProd'));
     return json(res, 200, { ok: true, product: p });
   }
-  const pRev = pathname.match(/^\/api\/products\/([^/]+)\/reviews$/);
+  const pRev = pathname.match(/^\/api\/products\/([^/]+)\/reviews\/?$/);
   if (pRev) {
-    const p = db.products.find((x: any) => x.id === decodeURIComponent(pRev[1]) || x.slug === decodeURIComponent(pRev[1]));
+    const rawKey = decodeURIComponent(pRev[1]).trim().toLowerCase();
+    const cleanKey = rawKey.replace(/^\/urun\//, '').replace(/\/+$/, '');
+    const p = db.products.find((x: any) => {
+      const s = String(x.slug || '').toLowerCase();
+      const i = String(x.id || '').toLowerCase();
+      return s === cleanKey || i === cleanKey || s === rawKey || i === rawKey;
+    });
     if (!p) return sendError(res, 404, E('err.noProd'));
     if (method === 'GET') return json(res, 200, { ok: true, reviews: db.reviews.filter((r: any) => r.productId === p.id && r.approved).sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)) });
     if (method === 'POST') {

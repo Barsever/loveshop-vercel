@@ -402,7 +402,8 @@
     overlay.setAttribute('aria-hidden', 'false');
 
     try {
-      const res = await api(`/api/products/${productIdOrSlug}`);
+      const cleanKey = String(productIdOrSlug || '').replace(/^\/urun\//, '').replace(/\/+$/, '').trim();
+      const res = await api('/api/products/' + encodeURIComponent(cleanKey));
       const p = (res && res.product) ? res.product : res;
       if (!p || !p.id) throw new Error('Ürün bulunamadı');
 
@@ -578,7 +579,9 @@
           e.preventDefault();
           e.stopPropagation();
           const card = cardLink.closest('.prod-card');
-          const pid = card?.dataset?.id || card?.dataset?.slug || cardLink.dataset?.slug || cardLink.getAttribute('href')?.replace('/urun/', '');
+          const rawHref = cardLink.getAttribute('href') || '';
+          const hrefKey = rawHref.replace(/^\/urun\//, '').replace(/\/+$/, '').trim();
+          const pid = card?.dataset?.slug || cardLink.dataset?.slug || card?.dataset?.id || hrefKey;
           if (pid) {
             openSpatialCardZoom(pid, card);
             return;
@@ -690,10 +693,18 @@
   async function initProduct() {
     const root = $('#product-root');
     if (!root) return;
-    const slug = location.pathname.split('/').pop();
+    const parts = location.pathname.split('/').filter(Boolean);
+    const rawSlug = parts.pop() || '';
+    const slug = decodeURIComponent(rawSlug).replace(/\/+$/, '').trim();
+    if (!slug || slug === 'urun') {
+      root.innerHTML = `<div class="empty-state"><div class="big">💔</div><p>${t('pd.notfound')}</p><a class="btn btn-primary" href="/magaza" style="margin-top:16px">${t('pd.notfound.btn')}</a></div>`;
+      return;
+    }
     let p;
     try {
-      p = (await api('/api/products/' + encodeURIComponent(slug))).product;
+      const res = await api('/api/products/' + encodeURIComponent(slug));
+      p = res.product || res;
+      if (!p || !p.id) throw new Error('notfound');
     } catch {
       root.innerHTML = `<div class="empty-state"><div class="big">💔</div><p>${t('pd.notfound')}</p><a class="btn btn-primary" href="/magaza" style="margin-top:16px">${t('pd.notfound.btn')}</a></div>`;
       return;
