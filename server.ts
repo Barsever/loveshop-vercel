@@ -20,15 +20,17 @@ const DATA = path.join(ROOT, 'data');
 const SESSIONS_FILE = path.join(DATA, 'sessions.json');
 
 // Ensure db and seed data exist with studio art-directed assets
-seed(true);
+try { seed(false); } catch (e) {}
 let db = load();
 if (!db.contact) db.contact = [];
 
 let sessions: Record<string, any> = {};
 try { sessions = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8')); } catch { sessions = {}; }
 function persistSessions() {
-  fs.mkdirSync(DATA, { recursive: true });
-  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions));
+  try {
+    fs.mkdirSync(DATA, { recursive: true });
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessions));
+  } catch (e) {}
 }
 
 const hash = hashPassword;
