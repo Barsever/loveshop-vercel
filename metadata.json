@@ -1,0 +1,7 @@
+{
+  "name": "Love Shop",
+  "description": "Gizli paketleme, güvenli ve anonim ödeme garantili 18+ yetkin yaşam ve yetişkin ürünleri online mağazası ve yönetim paneli.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
