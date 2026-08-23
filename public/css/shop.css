@@ -1449,3 +1449,28 @@ nav.top, .hero, section.block, .page-head, .shop-layout, .pd-layout, .cart-layou
   .nl-form { flex-direction: column; }
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* ==== Age Gate Transitions ==== */
+#age-gate {
+  transition: opacity 1.2s ease, visibility 1.2s;
+}
+#age-gate.passing {
+  opacity: 0;
+  pointer-events: none;
+}
+#age-gate.passing .age-content {
+  transform: translateY(-40px);
+  opacity: 0;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body.gate-active nav.top,
+body.gate-active main,
+body.gate-active footer {
+  filter: blur(15px);
+  transform: scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+}
+nav.top, main, footer {
+  transition: filter 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, background 0.3s;
+}

@@ -542,6 +542,9 @@ function layout(title: string, body: string, opts: any = {}, ctx: any = null) {
 <body>
 ${opts.noChrome ? body : `
 <div id="age-gate" class="hidden-check">
+  <video id="age-video" class="age-video" autoplay loop muted playsinline poster="https://images.unsplash.com/photo-1596524430615-b46475ddff6e?auto=format&fit=crop&w=1920&q=80">
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-smoke-in-dark-background-22137-large.mp4" type="video/mp4">
+  </video>
   <div class="age-overlay" aria-hidden="true"></div>
   <div class="age-content">
     <h2 class="brand" style="justify-content:center;font-size:30px">LOVE<span class="dot">.</span></h2>
@@ -621,7 +624,7 @@ ${body}
 </div>
 
 <script>window.__LS_LANG__='${C.lang}';</script>
-<script src="/js/shop.js?v=1787485043973"></script>
+<script src="/js/shop.js?v=${Date.now()}"></script>
 </body>
 </html>`;
 }

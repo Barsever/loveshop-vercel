@@ -225,15 +225,21 @@
   LS.toast = toast;
 
   /* ---------- age gate ---------- */
-  const gate = $('#age-gate');
+  const gate = $(`#age-gate`);
   if (gate) {
-    if (localStorage.getItem('ls_age_ok') === '1') gate.classList.add('hidden');
-    $('#age-yes').addEventListener('click', () => {
-      localStorage.setItem('ls_age_ok', '1');
-      gate.classList.add('hidden');
+    if (localStorage.getItem(`ls_age_ok_v3`) === `1`) {
+      gate.classList.add(`hidden`);
+    } else {
+      document.body.classList.add(`gate-active`);
+    }
+    $(`#age-yes`).addEventListener(`click`, () => {
+      localStorage.setItem(`ls_age_ok_v3`, `1`);
+      gate.classList.add(`passing`);
+      document.body.classList.remove(`gate-active`);
+      setTimeout(() => gate.classList.add(`hidden`), 1200);
     });
-    $('#age-no').addEventListener('click', () => {
-      location.href = 'https://www.google.com';
+    $(`#age-no`).addEventListener(`click`, () => {
+      location.href = `https://www.google.com`;
     });
   }
 
