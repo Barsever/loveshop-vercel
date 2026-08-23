@@ -70,16 +70,18 @@ function getSid(req: http.IncomingMessage) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 function setSidCookie(res: http.ServerResponse, sid: string) {
-  res.setHeader('Set-Cookie', `ls_sid=${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`);
+  res.setHeader('Set-Cookie', `ls_sid=${sid}; Path=/; SameSite=None; Secure; HttpOnly; Max-Age=${60 * 60 * 24 * 30}`);
   res.setHeader('x-ls-sid', sid);
 }
 function clearSidCookie(res: http.ServerResponse) {
-  res.setHeader('Set-Cookie', 'ls_sid=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+  res.setHeader('Set-Cookie', 'ls_sid=; Path=/; SameSite=None; Secure; HttpOnly; Max-Age=0');
 }
 function getSession(req: http.IncomingMessage, res?: http.ServerResponse) {
   let sid = getSid(req);
-  if (!sid || !sessions[sid]) {
-    sid = sid || crypto.randomBytes(24).toString('hex');
+  if (!sid) {
+    sid = 'sid_' + crypto.randomBytes(16).toString('hex');
+  }
+  if (!sessions[sid]) {
     sessions[sid] = { createdAt: now(), userId: null, cart: [], coupon: null, lastGuestEmail: null };
     persistSessions();
   }
@@ -316,10 +318,12 @@ function makeT(lang: string) {
   };
 }
 
-function pageCtx(req: http.IncomingMessage) {
+function pageCtx(req: http.IncomingMessage, res?: http.ServerResponse) {
   const lang = getCookieValue(req, 'ls_lang') === 'en' ? 'en' : 'tr';
   const theme = getCookieValue(req, 'ls_theme') === 'dark' ? 'dark' : 'light';
-  return { lang, theme, t: makeT(lang), num: (n: number) => n.toLocaleString(lang === 'en' ? 'en-US' : 'tr-TR') };
+  const sess = getSession(req, res);
+  const cartCount = (sess && Array.isArray(sess.cart)) ? sess.cart.reduce((a: number, i: any) => a + (parseInt(i.qty, 10) || 1), 0) : 0;
+  return { lang, theme, t: makeT(lang), num: (n: number) => n.toLocaleString(lang === 'en' ? 'en-US' : 'tr-TR'), cartCount };
 }
 
 const ERR: Record<string, Record<string, string>> = {
@@ -457,15 +461,15 @@ function bentoTemplate(n: number) {
   } else if (n === 2) {
     desk.push([L[0], L[0], L[1], L[1]], ['e', 'e', 'e', 'e']);
     mid.push([L[0], L[1]], ['e', 'e']);
-    mob.push([L[0]], [L[1]], ['e']);
+    mob.push([L[0], L[1]], ['e', 'e']);
   } else if (n === 3) {
     desk.push([L[0], L[0], L[1], L[2]], [L[0], L[0], 'e', 'e']);
-    mid.push([L[0], L[1]], [L[2], L[2]], ['e', 'e']);
-    mob.push([L[0]], [L[1]], [L[2]], ['e']);
+    mid.push([L[0], L[1]], [L[2], 'e']);
+    mob.push([L[0], L[0]], [L[1], L[2]], ['e', 'e']);
   } else {
     desk.push([L[0], L[0], L[1], L[2]], [L[0], L[0], L[3], 'e']);
     mid.push([L[0], L[1]], [L[2], L[3]], ['e', 'e']);
-    mob.push([L[0]], [L[1]], [L[2]], [L[3]], ['e']);
+    mob.push([L[0], L[0]], [L[1], L[2]], [L[3], 'e']);
   }
   const formatRows = (rows: string[][]) => rows.map((r) => `'${r.join(' ')}'`).join(' ');
   return { desktop: formatRows(desk), mid: formatRows(mid), mob: formatRows(mob) };
@@ -533,7 +537,7 @@ function layout(title: string, body: string, opts: any = {}, ctx: any = null) {
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,600&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
 <script>try{var d=localStorage.getItem('ls_theme');if(d==='dark'||((d===null||d==='')&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}</script>
-<link rel="stylesheet" href="/css/shop.css">
+<link rel="stylesheet" href="/css/shop.css?v=${Date.now()}">
 </head>
 <body>
 ${opts.noChrome ? body : `
@@ -566,7 +570,7 @@ ${opts.noChrome ? body : `
     <button id="lang-toggle" class="lang-btn" title="${C.lang === 'tr' ? 'Switch to English' : 'Türkçeye geç'}" aria-label="Switch language">${C.lang === 'tr' ? 'EN' : 'TR'}</button>
     <span id="nav-user"><a href="/giris" class="icon-btn" title="${tr('nav.login')}"><svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a></span>
     <a href="/admin" id="nav-admin" class="icon-btn" style="display:none" title="Admin Panel"><svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></a>
-    <a href="/sepet" class="icon-btn" title="Sepet"><svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="cart-badge" id="cart-badge">0</span></a>
+    <a href="/sepet" class="icon-btn" title="Sepet"><svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="cart-badge" id="cart-badge"${(C.cartCount && C.cartCount > 0) ? '' : ' style="display:none"'}>${C.cartCount || 0}</span></a>
     <button id="burger" class="icon-btn" aria-label="Menü"><svg class="icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
   </div>
 </nav>
@@ -617,7 +621,7 @@ ${body}
 </div>
 
 <script>window.__LS_LANG__='${C.lang}';</script>
-<script src="/js/shop.js"></script>
+<script src="/js/shop.js?v=1787485043973"></script>
 </body>
 </html>`;
 }
@@ -653,15 +657,10 @@ function pageHome(req: http.IncomingMessage, res: http.ServerResponse) {
   const top = [...allCats].sort((a, b) => b.count - a.count).slice(0, 4);
   const rest = allCats.filter((c) => !top.some((t) => t.slug === c.slug));
   const totalCount = allCats.reduce((s, c) => s + c.count, 0);
-  const tpl = bentoTemplate(top.length);
-  const bentoStyle = `.bento{grid-template-areas:${tpl.desktop}}
-@media(max-width:1100px){.bento{grid-template-areas:${tpl.mid}}}
-@media(max-width:860px){.bento{grid-template-areas:${tpl.mob}}}`;
   const featured = db.products.filter((p: any) => p.featured).slice(0, 10);
   const news = [...db.products].sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
   const reviews = db.reviews.filter((r: any) => r.approved).slice(0, 6);
   const html = `
-<style id="bento-areas">${bentoStyle}</style>
 <section class="hero">
   <div class="hero-bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
   <div class="hero-content">
@@ -686,15 +685,16 @@ function pageHome(req: http.IncomingMessage, res: http.ServerResponse) {
   <div class="bento">${top.map((c, i) => {
     const parts = c.name.split(' ');
     const nm = parts[0] + (parts.length > 1 ? ` <em>${parts.slice(1).join(' ')}</em>` : '');
+    const area = ['a','b','c','d'][i] || 'a';
     return `
-    <a class="bento-card rv rv-d${i + 1}" style="grid-area:${'abcde'[i]}" href="/magaza?kat=${c.slug}">
+    <a class="bento-card bento-card-${area} rv rv-d${i + 1}" href="/magaza?kat=${c.slug}">
       <span class="bento-rank">0${i + 1}</span>
       <img class="bento-bg" src="${esc(c.image)}" alt="${esc(c.name)}" loading="lazy">
       <div class="bento-meta"><h3>${nm}</h3><span class="bcount">${c.count} ${tr('cats.products')}</span></div>
       <span class="bento-go">${tr('bento.explore')}</span>
     </a>`;
   }).join('')}
-    <a class="bento-cta rv rv-d${top.length + 1}" style="grid-area:e" href="/magaza">
+    <a class="bento-card bento-cta bento-card-e rv rv-d${top.length + 1}" href="/magaza">
       <span class="cta-glow" aria-hidden="true"></span>
       <span class="cta-arrows" aria-hidden="true">→ → →</span>
       <span class="cta-inner">

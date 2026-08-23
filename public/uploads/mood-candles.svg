@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+  <defs>
+    <!-- Studio backdrop gradients -->
+    <linearGradient id="studio-bg" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FBF8F4"/>
+      <stop offset="60%" stop-color="#F3ECE3"/>
+      <stop offset="100%" stop-color="#EAE1D5"/>
+    </linearGradient>
+    <radialGradient id="studio-key" cx="36%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#EAE1D5" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contact-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2D241E" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#3D322B" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#3D322B" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Studio Material Shaders -->
+    <linearGradient id="rose-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F7D8CA"/>
+      <stop offset="35%" stop-color="#D9A08B"/>
+      <stop offset="70%" stop-color="#F9E2D8"/>
+      <stop offset="100%" stop-color="#B87661"/>
+    </linearGradient>
+    <linearGradient id="champagne-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F9F2DC"/>
+      <stop offset="40%" stop-color="#D6B87B"/>
+      <stop offset="75%" stop-color="#F6EDD2"/>
+      <stop offset="100%" stop-color="#A58448"/>
+    </linearGradient>
+    <linearGradient id="matte-blush" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEEAE6"/>
+      <stop offset="35%" stop-color="#F6B8AF"/>
+      <stop offset="80%" stop-color="#E28B80"/>
+      <stop offset="100%" stop-color="#BF665B"/>
+    </linearGradient>
+    <linearGradient id="matte-coral" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEDDD6"/>
+      <stop offset="40%" stop-color="#F59B8E"/>
+      <stop offset="85%" stop-color="#D86B5D"/>
+      <stop offset="100%" stop-color="#AD4B3E"/>
+    </linearGradient>
+    <linearGradient id="matte-obsidian" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#544B47"/>
+      <stop offset="35%" stop-color="#342E2B"/>
+      <stop offset="80%" stop-color="#211D1B"/>
+      <stop offset="100%" stop-color="#141110"/>
+    </linearGradient>
+    <linearGradient id="matte-cream" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="45%" stop-color="#F7EFE5"/>
+      <stop offset="85%" stop-color="#E2D4C3"/>
+      <stop offset="100%" stop-color="#C5B49E"/>
+    </linearGradient>
+    <linearGradient id="amber-oil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE8B3"/>
+      <stop offset="50%" stop-color="#EAA639"/>
+      <stop offset="100%" stop-color="#B86F15"/>
+    </linearGradient>
+    <linearGradient id="frosted-glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="25%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- Gaussian contact blur -->
+    <filter id="soft-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- Floor Contact Shadow -->
+  <ellipse cx="450" cy="740" rx="230" ry="34" fill="url(#contact-shadow)" filter="url(#soft-blur)" opacity="0.4"/>
+
+  <!-- Product Vector Silhouette & Lighting -->
+  
+    <!-- Mood Candles: Ceramic Vessel & Wooden Wick -->
+    <g transform="translate(0, 20)">
+      <!-- Matte ceramic vessel -->
+      <path d="M340 400 L560 400 L530 670 L370 670 Z" fill="url(#matte-cream)"/>
+      <ellipse cx="450" cy="400" rx="110" ry="24" fill="#F0E6D8"/>
+      <!-- Melted warm wax pool -->
+      <ellipse cx="450" cy="405" rx="98" ry="20" fill="url(#amber-oil)" opacity="0.8"/>
+      <!-- Wooden wick and flame -->
+      <rect x="446" y="375" width="8" height="26" rx="2" fill="#5C3A21"/>
+      <path d="M450 310 C465 340 468 365 450 380 C432 365 435 340 450 310 Z" fill="url(#champagne-gold)"/>
+      <circle cx="450" cy="355" r="30" fill="#FFE082" opacity="0.25" filter="url(#soft-blur)"/>
+      <!-- Vessel Label -->
+      <text x="450" y="540" font-family="'Outfit', sans-serif" font-size="13" font-weight="700" letter-spacing="4" fill="#292524" text-anchor="middle">LOVE.</text>
+      <text x="450" y="565" font-family="'Outfit', sans-serif" font-size="9" letter-spacing="2" fill="#78716C" text-anchor="middle">MOOD CANDLE</text>
+    </g>
+</svg>

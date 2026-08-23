@@ -160,10 +160,30 @@
         sid = 'sid_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
         localStorage.setItem('ls_sid', sid);
       }
+      try {
+        document.cookie = 'ls_sid=' + encodeURIComponent(sid) + '; Path=/; SameSite=None; Secure; Max-Age=31536000';
+      } catch {}
       return sid;
     } catch {
       return '';
     }
+  }
+
+  /* Cart local storage cache for instant rendering and resilient offline/iframe sync */
+  function getLocalCart() {
+    try {
+      const raw = localStorage.getItem('ls_cart_data');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+  function setLocalCart(cart) {
+    try {
+      if (cart && Array.isArray(cart.items)) {
+        localStorage.setItem('ls_cart_data', JSON.stringify(cart));
+      } else {
+        localStorage.removeItem('ls_cart_data');
+      }
+    } catch {}
   }
 
   async function api(path, opts = {}) {
@@ -181,7 +201,10 @@
     });
     const serverSid = res.headers.get('x-ls-sid');
     if (serverSid) {
-      try { localStorage.setItem('ls_sid', serverSid); } catch {}
+      try {
+        localStorage.setItem('ls_sid', serverSid);
+        document.cookie = 'ls_sid=' + encodeURIComponent(serverSid) + '; Path=/; SameSite=None; Secure; Max-Age=31536000';
+      } catch {}
     }
     let data;
     try { data = await res.json(); } catch { data = { ok: false }; }
@@ -261,23 +284,66 @@
   });
 
   /* ---------- cart badge ---------- */
-  function refreshCartBadge() {
-    api('/api/cart').then((c) => {
-      const badge = $('#cart-badge');
-      if (!badge) return;
-      const n = (c && c.items) ? c.items.reduce((a, i) => a + i.qty, 0) : 0;
-      badge.textContent = n;
-      badge.style.display = n ? 'grid' : 'none';
+  function updateCartBadge(count) {
+    const badge = $('#cart-badge');
+    if (!badge) return;
+    const n = Math.max(0, parseInt(count, 10) || 0);
+    badge.textContent = n;
+    if (n > 0) {
+      badge.style.display = 'grid';
       badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
-    }).catch(() => {});
+    } else {
+      badge.style.display = 'none';
+    }
   }
+  LS.updateCartBadge = updateCartBadge;
+
+  async function refreshCartBadge() {
+    // 1. Immediately reflect local cart count if present (eliminates any UI flicker)
+    const local = getLocalCart();
+    if (local && Array.isArray(local.items)) {
+      const localCount = local.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0);
+      updateCartBadge(localCount);
+    }
+
+    try {
+      const c = await api('/api/cart');
+      if (c && Array.isArray(c.items)) {
+        if (c.items.length > 0) {
+          setLocalCart(c);
+          const n = c.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0);
+          updateCartBadge(n);
+        } else if (local && Array.isArray(local.items) && local.items.length > 0) {
+          // If server session lost items, restore them from local cache
+          for (const item of local.items) {
+            try {
+              await api('/api/cart/add', { method: 'POST', body: { productId: item.productId, qty: item.qty, variant: item.variant } });
+            } catch {}
+          }
+          const fresh = await api('/api/cart').catch(() => local);
+          setLocalCart(fresh);
+          const n = (fresh && Array.isArray(fresh.items)) ? fresh.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0) : 0;
+          updateCartBadge(n);
+        } else {
+          setLocalCart(null);
+          updateCartBadge(0);
+        }
+      }
+    } catch {
+      if (local && Array.isArray(local.items)) {
+        const localCount = local.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0);
+        updateCartBadge(localCount);
+      }
+    }
+  }
+  LS.refreshCartBadge = refreshCartBadge;
   document.addEventListener('ls:cart', refreshCartBadge);
   if ($('nav.top')) refreshCartBadge();
 
   async function addToCart(productId, qty = 1, variant = 'standart', btn = null) {
     if (!productId) return;
     try {
-      await api('/api/cart/add', { method: 'POST', body: { productId, qty, variant } });
+      const res = await api('/api/cart/add', { method: 'POST', body: { productId, qty, variant } });
       if (btn) {
         const origText = btn.innerHTML;
         btn.innerHTML = '✓';
@@ -288,6 +354,11 @@
         }, 1400);
       }
       toast(t('added'), '🛍️');
+      if (res && Array.isArray(res.items)) {
+        setLocalCart(res);
+        const n = res.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0);
+        updateCartBadge(n);
+      }
       document.dispatchEvent(new Event('ls:cart'));
     } catch (e) {
       toast(e.message || 'Ürün sepete eklenemedi', '⚠️');
@@ -352,7 +423,7 @@
     return `
     <article class="prod-card rv" data-id="${p.id}" data-slug="${p.slug}">
       <a href="/urun/${p.slug}" class="prod-media" data-slug="${p.slug}">
-        <img src="${p.image}" alt="${p.name}" loading="lazy">
+        <img src="${p.image}?v=transparent2" alt="${p.name}" loading="lazy">
         <div class="card-sheen"></div>
         <div class="prod-badges">${badges.join('')}</div>
       </a>
@@ -418,7 +489,7 @@
         </button>
         <div class="spatial-grid">
           <div class="spatial-visual-hero">
-            <img src="${p.image}" alt="${p.name}" loading="lazy">
+            <img src="${p.image}?v=transparent2" alt="${p.name}" loading="lazy">
             <div class="spatial-badge-cluster">
               ${p.bestSeller ? `<span>${t('badge.hot')}</span>` : ''}
               ${p.isNew ? `<span>${t('badge.new')}</span>` : ''}
@@ -713,7 +784,7 @@
     root.innerHTML = `
     <div class="page-head" style="padding-bottom:0"><div class="crumbs"><a href="/">${t('pd.crumb.home')}</a> / <a href="/magaza">${t('pd.crumb.shop')}</a> / <a href="/magaza?kat=${p.category}">${catName(p.category, p.categoryName)}</a></div></div>
     <div class="pd-layout">
-      <div class="pd-gallery"><div class="pd-media"><img src="${p.image}" alt="${p.name}"></div></div>
+      <div class="pd-gallery"><div class="pd-media"><img src="${p.image}?v=transparent2" alt="${p.name}"></div></div>
       <div class="pd-info">
         <div class="prod-cat">${catName(p.category, p.categoryName)}</div>
         <h1>${p.name}</h1>
@@ -816,14 +887,33 @@
     if (!root) return;
     async function render() {
       root.innerHTML = '<div class="spinner"></div>';
-      const c = await api('/api/cart').catch(() => ({ items: [] }));
-      if (!c.items.length) {
+      let c = await api('/api/cart').catch(() => null);
+      const local = getLocalCart();
+
+      // If server returned empty cart but local cache has items, restore them to server
+      if ((!c || !c.items || !c.items.length) && local && Array.isArray(local.items) && local.items.length > 0) {
+        for (const item of local.items) {
+          try {
+            await api('/api/cart/add', { method: 'POST', body: { productId: item.productId, qty: item.qty, variant: item.variant } });
+          } catch {}
+        }
+        c = await api('/api/cart').catch(() => local);
+      }
+
+      if (!c || !c.items || !c.items.length) {
+        setLocalCart(null);
+        updateCartBadge(0);
         root.innerHTML = `<div class="empty-state"><div class="big">🛒</div><p>${t('cart.empty')}</p><a class="btn btn-primary" href="/magaza" style="margin-top:18px">${t('cart.empty.btn')}</a></div>`;
         return;
       }
+
+      setLocalCart(c);
+      const badgeCount = c.items.reduce((a, i) => a + (parseInt(i.qty, 10) || 1), 0);
+      updateCartBadge(badgeCount);
+
       const lines = c.items.map((i) => `
         <div class="cart-line">
-          <img src="${i.image}" alt="${i.name}">
+          <img src="${i.image}?v=transparent2" alt="${i.name}">
           <div>
             <div class="cl-cat">${catName(i.category, i.categoryName)}</div>
             <a class="cl-name" href="/urun/${i.slug}">${i.name}</a>
@@ -859,20 +949,46 @@
         <a href="/odeme" class="btn btn-primary btn-block" style="margin-top:18px">${t('cart.checkout')}</a>
         <a href="/magaza" class="btn btn-ghost btn-block" style="margin-top:10px">${t('cart.continue')}</a>
       </div>`;
-      $$('[data-inc]').forEach((b) => b.addEventListener('click', async () => { await api('/api/cart/update', { method: 'POST', body: { productId: b.dataset.inc, qty: +b.nextElementSibling.value + 1 } }); render(); document.dispatchEvent(new Event('ls:cart')); }));
+
+      $$('[data-inc]').forEach((b) => b.addEventListener('click', async () => {
+        const res = await api('/api/cart/update', { method: 'POST', body: { productId: b.dataset.inc, qty: +b.nextElementSibling.value + 1 } });
+        if (res) setLocalCart(res);
+        render();
+        document.dispatchEvent(new Event('ls:cart'));
+      }));
+
       $$('[data-dec]').forEach((b) => b.addEventListener('click', async () => {
         const q = +b.nextElementSibling.value - 1;
-        if (q < 1) { if (confirm(t('cart.remove.confirm'))) { await api('/api/cart/remove', { method: 'POST', body: { productId: b.dataset.dec } }); } }
-        else await api('/api/cart/update', { method: 'POST', body: { productId: b.dataset.dec, qty: q } });
-        render(); document.dispatchEvent(new Event('ls:cart'));
+        let res;
+        if (q < 1) {
+          if (confirm(t('cart.remove.confirm'))) {
+            res = await api('/api/cart/remove', { method: 'POST', body: { productId: b.dataset.dec } });
+          }
+        } else {
+          res = await api('/api/cart/update', { method: 'POST', body: { productId: b.dataset.dec, qty: q } });
+        }
+        if (res) setLocalCart(res);
+        render();
+        document.dispatchEvent(new Event('ls:cart'));
       }));
-      $$('[data-del]').forEach((b) => b.addEventListener('click', async () => { await api('/api/cart/remove', { method: 'POST', body: { productId: b.dataset.del } }); render(); document.dispatchEvent(new Event('ls:cart')); }));
+
+      $$('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+        const res = await api('/api/cart/remove', { method: 'POST', body: { productId: b.dataset.del } });
+        if (res) setLocalCart(res);
+        render();
+        document.dispatchEvent(new Event('ls:cart'));
+      }));
+
       const ca = $('#coupon-apply');
       if (ca) ca.addEventListener('click', async () => {
         const code = $('#coupon-input').value.trim().toUpperCase();
         if (!code) return;
-        try { await api('/api/cart/coupon', { method: 'POST', body: { code } }); toast(t('cart.coupon.ok'), '🎟️'); render(); }
-        catch (e) { toast(e.message, '⚠️'); }
+        try {
+          const res = await api('/api/cart/coupon', { method: 'POST', body: { code } });
+          toast(t('cart.coupon.ok'), '🎟️');
+          if (res) setLocalCart(res);
+          render();
+        } catch (e) { toast(e.message, '⚠️'); }
       });
     }
     render();
@@ -951,6 +1067,8 @@
       const btn = $('#ck-submit'); btn.disabled = true; btn.textContent = t('ck.preparing');
       try {
         const r = await api('/api/checkout', { method: 'POST', body });
+        setLocalCart(null);
+        updateCartBadge(0);
         toast(r.pickup ? t('ck.ok.pickup') : t('ck.ok.ship'), '💖');
         setTimeout(() => { location.href = '/tesekkurler/' + r.orderId; }, r.pickup ? 900 : 1200);
       } catch (e) { btn.disabled = false; refreshPay(); toast(e.message, '⚠️'); }
@@ -1126,7 +1244,7 @@
         ${prods.map((p, i) => `
         <div class="cf-pos" data-i="${i}">
           <a class="cf-card" href="/urun/${p.slug}" aria-label="${p.name}">
-            <img src="${p.image}" alt="${p.name}" draggable="false">
+            <img src="${p.image}?v=transparent2" alt="${p.name}" draggable="false">
             <span class="cf-cap"><b>${p.name}</b><em>${fmt(p.price)}${p.oldPrice ? ' <s style="color:#78716C;font-size:10px;font-weight:500">' + fmt(p.oldPrice) + '</s>' : ''}</em></span>
           </a>
         </div>`).join('')}
@@ -1334,7 +1452,12 @@
     mainEl.classList.add('is-transitioning');
 
     try {
-      const resp = await fetch(url, { headers: { 'X-Requested-With': 'SPA' } });
+      const resp = await fetch(url, {
+        headers: {
+          'X-Requested-With': 'SPA',
+          'x-ls-sid': getClientSid()
+        }
+      });
       if (!resp.ok) throw new Error('Page fetch failed');
       const htmlText = await resp.text();
       const doc = new DOMParser().parseFromString(htmlText, 'text/html');
@@ -1361,13 +1484,8 @@
         }
       });
 
-      // Update cart count or badges if changed in incoming page
-      const incomingCartBadge = doc.querySelector('#cart-badge');
-      const currentCartBadge = $('#cart-badge');
-      if (incomingCartBadge && currentCartBadge) {
-        currentCartBadge.textContent = incomingCartBadge.textContent;
-        currentCartBadge.classList.toggle('has', incomingCartBadge.classList.contains('has'));
-      }
+      // Update cart count or badges
+      refreshCartBadge();
 
       // Smooth swap
       mainEl.innerHTML = newMain.innerHTML;

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+  <defs>
+    <!-- Studio backdrop gradients -->
+    <linearGradient id="studio-bg" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FBF8F4"/>
+      <stop offset="60%" stop-color="#F3ECE3"/>
+      <stop offset="100%" stop-color="#EAE1D5"/>
+    </linearGradient>
+    <radialGradient id="studio-key" cx="36%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#EAE1D5" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contact-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2D241E" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#3D322B" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#3D322B" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Studio Material Shaders -->
+    <linearGradient id="rose-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F7D8CA"/>
+      <stop offset="35%" stop-color="#D9A08B"/>
+      <stop offset="70%" stop-color="#F9E2D8"/>
+      <stop offset="100%" stop-color="#B87661"/>
+    </linearGradient>
+    <linearGradient id="champagne-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F9F2DC"/>
+      <stop offset="40%" stop-color="#D6B87B"/>
+      <stop offset="75%" stop-color="#F6EDD2"/>
+      <stop offset="100%" stop-color="#A58448"/>
+    </linearGradient>
+    <linearGradient id="matte-blush" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEEAE6"/>
+      <stop offset="35%" stop-color="#F6B8AF"/>
+      <stop offset="80%" stop-color="#E28B80"/>
+      <stop offset="100%" stop-color="#BF665B"/>
+    </linearGradient>
+    <linearGradient id="matte-coral" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEDDD6"/>
+      <stop offset="40%" stop-color="#F59B8E"/>
+      <stop offset="85%" stop-color="#D86B5D"/>
+      <stop offset="100%" stop-color="#AD4B3E"/>
+    </linearGradient>
+    <linearGradient id="matte-obsidian" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#544B47"/>
+      <stop offset="35%" stop-color="#342E2B"/>
+      <stop offset="80%" stop-color="#211D1B"/>
+      <stop offset="100%" stop-color="#141110"/>
+    </linearGradient>
+    <linearGradient id="matte-cream" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="45%" stop-color="#F7EFE5"/>
+      <stop offset="85%" stop-color="#E2D4C3"/>
+      <stop offset="100%" stop-color="#C5B49E"/>
+    </linearGradient>
+    <linearGradient id="amber-oil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE8B3"/>
+      <stop offset="50%" stop-color="#EAA639"/>
+      <stop offset="100%" stop-color="#B86F15"/>
+    </linearGradient>
+    <linearGradient id="frosted-glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="25%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- Gaussian contact blur -->
+    <filter id="soft-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- Floor Contact Shadow -->
+  <ellipse cx="450" cy="740" rx="230" ry="34" fill="url(#contact-shadow)" filter="url(#soft-blur)" opacity="0.4"/>
+
+  <!-- Product Vector Silhouette & Lighting -->
+  
+    <!-- Silk Set: Draped Silk Ribbons & Gold Clasp -->
+    <g transform="translate(0, 10)">
+      <!-- Folded luxurious silk ribbons -->
+      <path d="M280 560 C320 380 460 330 540 380 C610 420 630 540 580 620 C520 700 380 680 320 640 Z" fill="url(#matte-blush)"/>
+      <path d="M300 540 C340 410 450 360 520 400 C580 435 590 520 550 590 C500 660 380 640 330 600 Z" fill="url(#matte-coral)" opacity="0.75"/>
+      <path d="M330 450 C380 370 490 380 540 430" stroke="#FFFFFF" stroke-width="16" fill="none" opacity="0.38" stroke-linecap="round"/>
+      <!-- Polished gold O-ring connector -->
+      <circle cx="450" cy="470" r="62" fill="none" stroke="url(#champagne-gold)" stroke-width="16"/>
+      <circle cx="450" cy="470" r="62" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.6"/>
+      <!-- Draped hanging sash tails -->
+      <path d="M410 520 C390 600 340 680 320 720 L380 725 C410 680 440 600 450 530 Z" fill="url(#matte-blush)"/>
+      <path d="M470 520 C490 610 530 680 560 720 L510 725 C470 670 450 590 440 530 Z" fill="url(#matte-coral)"/>
+    </g>
+</svg>

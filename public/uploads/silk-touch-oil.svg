@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+  <defs>
+    <!-- Studio backdrop gradients -->
+    <linearGradient id="studio-bg" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FBF8F4"/>
+      <stop offset="60%" stop-color="#F3ECE3"/>
+      <stop offset="100%" stop-color="#EAE1D5"/>
+    </linearGradient>
+    <radialGradient id="studio-key" cx="36%" cy="28%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#EAE1D5" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contact-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2D241E" stop-opacity="0.22"/>
+      <stop offset="45%" stop-color="#3D322B" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#3D322B" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Studio Material Shaders -->
+    <linearGradient id="rose-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F7D8CA"/>
+      <stop offset="35%" stop-color="#D9A08B"/>
+      <stop offset="70%" stop-color="#F9E2D8"/>
+      <stop offset="100%" stop-color="#B87661"/>
+    </linearGradient>
+    <linearGradient id="champagne-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F9F2DC"/>
+      <stop offset="40%" stop-color="#D6B87B"/>
+      <stop offset="75%" stop-color="#F6EDD2"/>
+      <stop offset="100%" stop-color="#A58448"/>
+    </linearGradient>
+    <linearGradient id="matte-blush" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEEAE6"/>
+      <stop offset="35%" stop-color="#F6B8AF"/>
+      <stop offset="80%" stop-color="#E28B80"/>
+      <stop offset="100%" stop-color="#BF665B"/>
+    </linearGradient>
+    <linearGradient id="matte-coral" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FEDDD6"/>
+      <stop offset="40%" stop-color="#F59B8E"/>
+      <stop offset="85%" stop-color="#D86B5D"/>
+      <stop offset="100%" stop-color="#AD4B3E"/>
+    </linearGradient>
+    <linearGradient id="matte-obsidian" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#544B47"/>
+      <stop offset="35%" stop-color="#342E2B"/>
+      <stop offset="80%" stop-color="#211D1B"/>
+      <stop offset="100%" stop-color="#141110"/>
+    </linearGradient>
+    <linearGradient id="matte-cream" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="45%" stop-color="#F7EFE5"/>
+      <stop offset="85%" stop-color="#E2D4C3"/>
+      <stop offset="100%" stop-color="#C5B49E"/>
+    </linearGradient>
+    <linearGradient id="amber-oil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE8B3"/>
+      <stop offset="50%" stop-color="#EAA639"/>
+      <stop offset="100%" stop-color="#B86F15"/>
+    </linearGradient>
+    <linearGradient id="frosted-glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="25%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- Gaussian contact blur -->
+    <filter id="soft-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- Floor Contact Shadow -->
+  <ellipse cx="450" cy="740" rx="230" ry="34" fill="url(#contact-shadow)" filter="url(#soft-blur)" opacity="0.4"/>
+
+  <!-- Product Vector Silhouette & Lighting -->
+  
+    <!-- Silk Touch Oil: Frosted Heavy Glass Dropper -->
+    <g transform="translate(0, 15)">
+      <!-- Bottle Glass Body -->
+      <rect x="355" y="360" width="190" height="310" rx="36" fill="url(#frosted-glass)"/>
+      <!-- Amber oil meniscus inside -->
+      <rect x="370" y="420" width="160" height="235" rx="24" fill="url(#amber-oil)" opacity="0.88"/>
+      <!-- Minimalist LOVE. Studio label -->
+      <rect x="385" y="460" width="130" height="145" rx="8" fill="#FDFBF7"/>
+      <text x="450" y="510" font-family="'Outfit', sans-serif" font-size="14" font-weight="700" letter-spacing="4" fill="#292524" text-anchor="middle">LOVE.</text>
+      <text x="450" y="535" font-family="'Outfit', sans-serif" font-size="9" font-weight="500" letter-spacing="2" fill="#78716C" text-anchor="middle">SILK TOUCH OIL</text>
+      <line x1="420" y1="552" x2="480" y2="552" stroke="#D9A08B" stroke-width="1.5"/>
+      <text x="450" y="575" font-family="'Outfit', sans-serif" font-size="8" font-weight="500" letter-spacing="1.5" fill="#A8A29E" text-anchor="middle">100 ML • BOTANICAL</text>
+      <!-- Glass reflection sheen -->
+      <path d="M375 380 L375 650" stroke="#FFFFFF" stroke-width="10" opacity="0.5" stroke-linecap="round"/>
+      <!-- Gold dropper collar -->
+      <rect x="405" y="295" width="90" height="65" rx="10" fill="url(#champagne-gold)"/>
+      <!-- Rubber bulb -->
+      <path d="M420 295 C420 220 480 220 480 295 Z" fill="#292524"/>
+    </g>
+</svg>
